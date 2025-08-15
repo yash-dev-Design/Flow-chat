@@ -1,0 +1,2123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="favicon.png" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flow Chat</title>
+    <!-- Added premium Google Fonts with multiple weights -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Enhanced professional color palette with more sophisticated colors */
+            --primary-indigo: #4f46e5;
+            --primary-indigo-dark: #3730a3;
+            --primary-indigo-light: #6366f1;
+            --accent-emerald: #059669;
+            --accent-emerald-light: #10b981;
+            --neutral-slate-50: #f8fafc;
+            --neutral-slate-100: #f1f5f9;
+            --neutral-slate-200: #e2e8f0;
+            --neutral-slate-300: #cbd5e1;
+            --neutral-slate-400: #94a3b8;
+            --neutral-slate-500: #64748b;
+            --neutral-slate-600: #475569;
+            --neutral-slate-700: #334155;
+            --neutral-slate-800: #1e293b;
+            --neutral-slate-900: #0f172a;
+            --white: #ffffff;
+            --error-red: #dc2626;
+            --warning-amber: #d97706;
+            --success-green: #16a34a;
+
+            /* Added sophisticated shadow and gradient variables */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --gradient-primary: linear-gradient(135deg, var(--primary-indigo) 0%, var(--primary-indigo-light) 100%);
+            --gradient-bg: linear-gradient(135deg, var(--neutral-slate-50) 0%, #e0e7ff 50%, var(--neutral-slate-100) 100%);
+        }
+
+        body {
+            /* Updated to use Poppins font and enhanced background */
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gradient-bg);
+            min-height: 100vh;
+            color: var(--neutral-slate-800);
+            font-weight: 400;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Enhanced welcome screen with premium styling */
+        .welcome-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        .welcome-screen::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 20%, rgba(79, 70, 229, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .welcome-card {
+            background: var(--white);
+            padding: 48px 40px;
+            border-radius: 24px;
+            box-shadow: var(--shadow-2xl);
+            text-align: center;
+            max-width: 420px;
+            width: 100%;
+            position: relative;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .welcome-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+            border-radius: 24px 24px 0 0;
+        }
+
+        .welcome-card h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            letter-spacing: -0.025em;
+        }
+
+        .welcome-card .subtitle {
+            color: var(--neutral-slate-500);
+            margin-bottom: 32px;
+            font-size: 1.1rem;
+            font-weight: 300;
+            letter-spacing: 0.025em;
+        }
+
+        .input-group {
+            margin-bottom: 28px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--neutral-slate-700);
+            font-size: 0.95rem;
+            letter-spacing: 0.025em;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid var(--neutral-slate-200);
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 400;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--neutral-slate-50);
+            font-family: inherit;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary-indigo);
+            background: var(--white);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: var(--white);
+            border: none;
+            padding: 16px 32px;
+            border-radius: 16px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+            letter-spacing: 0.025em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            background: var(--neutral-slate-300);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Premium chat interface with enhanced styling */
+        .chat-container {
+            display: none;
+            max-width: 1400px;
+            margin: 0 auto;
+            height: 100vh;
+            background: var(--white);
+            box-shadow: var(--shadow-2xl);
+            border-radius: 0;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: var(--gradient-primary);
+            color: var(--white);
+            padding: 20px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+
+        .chat-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .chat-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-weight: 500;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            background: var(--accent-emerald-light);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.7;
+                transform: scale(1.1);
+            }
+        }
+
+        .chat-main {
+            display: flex;
+            height: calc(100vh - 88px);
+        }
+
+        /* Enhanced sidebar with premium styling */
+        .sidebar {
+            width: 320px;
+            background: var(--neutral-slate-50);
+            border-right: 1px solid var(--neutral-slate-200);
+            padding: 24px;
+            position: relative;
+        }
+
+        .sidebar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent, var(--neutral-slate-200), transparent);
+        }
+
+        .sidebar h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--neutral-slate-800);
+            letter-spacing: -0.025em;
+        }
+
+        .online-count {
+            background: var(--accent-emerald);
+            color: var(--white);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .online-users {
+            list-style: none;
+        }
+
+        .online-users li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .online-users li:hover {
+            background: var(--neutral-slate-100);
+            transform: translateX(4px);
+        }
+
+        .online-users li.current-user {
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary-indigo);
+            font-weight: 600;
+            border: 1px solid rgba(79, 70, 229, 0.2);
+        }
+
+        .user-status {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-emerald);
+            border-radius: 50%;
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Online user list enhancements */
+        .user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            color: var(--white);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .user-name {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .you-badge,
+        .new-badge {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .you-badge {
+            background: rgba(79, 70, 229, 0.12);
+            color: var(--primary-indigo);
+            border: 1px solid rgba(79, 70, 229, 0.25);
+        }
+
+        .new-badge {
+            background: var(--white);
+            color: var(--neutral-slate-700);
+            border: 1px solid var(--neutral-slate-200);
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--white);
+        }
+
+        /* Enhanced messages area with premium styling */
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            background: linear-gradient(to bottom, var(--white) 0%, var(--neutral-slate-50) 100%);
+            scroll-behavior: smooth;
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: var(--neutral-slate-100);
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: var(--neutral-slate-300);
+            border-radius: 3px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb:hover {
+            background: var(--neutral-slate-400);
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: messageSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes messageSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.own {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .message:not(.own) {
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            display: inline-block;
+            max-width: 75%;
+            padding: 16px 20px;
+            border-radius: 24px;
+            position: relative;
+            word-wrap: break-word;
+            box-shadow: var(--shadow-md);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .message-bubble:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Message reactions */
+        .message-reactions {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .reaction {
+            background: rgba(79, 70, 229, 0.1);
+            border: 1px solid rgba(79, 70, 229, 0.2);
+            border-radius: 12px;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .reaction:hover {
+            background: rgba(79, 70, 229, 0.2);
+            transform: scale(1.05);
+        }
+
+        .reaction.own-reaction {
+            background: rgba(79, 70, 229, 0.2);
+            border-color: var(--primary-indigo);
+        }
+
+        /* Message actions */
+        .message-actions {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--white);
+            border: 1px solid var(--neutral-slate-200);
+            border-radius: 8px;
+            padding: 4px;
+            box-shadow: var(--shadow-md);
+            display: none;
+            gap: 4px;
+        }
+
+        .message-bubble:hover .message-actions {
+            display: flex;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            padding: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--neutral-slate-500);
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: var(--neutral-slate-100);
+            color: var(--primary-indigo);
+        }
+
+        /* Thread indicator */
+        .thread-indicator {
+            font-size: 0.75rem;
+            color: var(--neutral-slate-500);
+            margin-top: 4px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .thread-indicator:hover {
+            color: var(--primary-indigo);
+        }
+
+        /* Search bar */
+        .search-container {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--neutral-slate-200);
+            background: var(--white);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--neutral-slate-200);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            background: var(--neutral-slate-50);
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-indigo);
+            background: var(--white);
+        }
+
+        /* Rich text toolbar */
+        .rich-text-toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--neutral-slate-50);
+            border-top: 1px solid var(--neutral-slate-200);
+            border-bottom: 1px solid var(--neutral-slate-200);
+        }
+
+        .format-btn {
+            background: none;
+            border: none;
+            padding: 6px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--neutral-slate-600);
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+        }
+
+        .format-btn:hover {
+            background: var(--neutral-slate-200);
+            color: var(--primary-indigo);
+        }
+
+        .format-btn.active {
+            background: var(--primary-indigo);
+            color: var(--white);
+        }
+
+        /* Avatar customization */
+        .avatar-upload {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .avatar-upload input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .avatar-upload:hover .avatar-overlay {
+            opacity: 1;
+        }
+
+        .avatar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        /* Enhanced typing indicator */
+        .typing-users {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .typing-user {
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary-indigo);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .message-bubble {
+            display: inline-block;
+            max-width: 75%;
+            padding: 16px 20px;
+            border-radius: 24px;
+            position: relative;
+            word-wrap: break-word;
+            box-shadow: var(--shadow-md);
+            transition: all 0.2s ease;
+        }
+
+        .message-bubble:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .message.own .message-bubble {
+            background: var(--gradient-primary);
+            color: var(--white);
+            border-bottom-right-radius: 8px;
+        }
+
+        .message:not(.own) .message-bubble {
+            background: var(--white);
+            color: var(--neutral-slate-800);
+            border: 1px solid var(--neutral-slate-200);
+            border-bottom-left-radius: 8px;
+        }
+
+        .message-header {
+            font-size: 0.8rem;
+            margin-bottom: 6px;
+            opacity: 0.8;
+            font-weight: 600;
+            letter-spacing: 0.025em;
+        }
+
+        .message.own .message-header {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .message:not(.own) .message-header {
+            color: var(--neutral-slate-500);
+        }
+
+        .message-text {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            font-weight: 400;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 400;
+            letter-spacing: 0.025em;
+        }
+
+        /* Enhanced typing indicator with premium animation */
+        .typing-indicator {
+            display: none;
+            padding: 16px 24px;
+            font-size: 0.9rem;
+            color: var(--neutral-slate-500);
+            font-style: italic;
+            background: var(--neutral-slate-50);
+            border-radius: 16px;
+            margin: 0 24px 16px;
+            border: 1px solid var(--neutral-slate-200);
+        }
+
+        .typing-dots {
+            display: inline-flex;
+            gap: 4px;
+            margin-left: 8px;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            background: var(--primary-indigo);
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes typingBounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+
+            40% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+        }
+
+        /* Premium message input area */
+        .message-input-area {
+            padding: 24px 32px;
+            background: var(--white);
+            border-top: 1px solid var(--neutral-slate-200);
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .message-input-container {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            max-width: 100%;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .message-input {
+            width: 100%;
+            padding: 16px 24px;
+            border: 2px solid var(--neutral-slate-200);
+            border-radius: 24px;
+            font-size: 0.95rem;
+            resize: none;
+            max-height: 120px;
+            min-height: 52px;
+            font-family: inherit;
+            font-weight: 400;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--neutral-slate-50);
+            line-height: 1.5;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: var(--primary-indigo);
+            background: var(--white);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+
+        .message-input::placeholder {
+            color: var(--neutral-slate-400);
+            font-weight: 400;
+        }
+
+        .send-btn {
+            background: var(--gradient-primary);
+            color: var(--white);
+            border: none;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .send-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .send-btn:hover::before {
+            left: 100%;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .send-btn:active {
+            transform: translateY(0) scale(1);
+        }
+
+        .send-btn:disabled {
+            background: var(--neutral-slate-300);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .attach-btn {
+            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+        }
+
+        .attach-btn:hover {
+            box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3), 0 4px 6px -4px rgba(245, 158, 11, 0.3);
+        }
+
+        /* Centered connection chip */
+        .connection-status {
+            position: fixed;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.03em;
+            background: var(--white);
+            color: var(--neutral-slate-700);
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--neutral-slate-200);
+            box-shadow: var(--shadow-md);
+            pointer-events: none;
+        }
+
+        .connection-status.connected {
+            color: var(--success-green);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .connection-status.disconnected {
+            color: var(--error-red);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+
+
+        /* Leave button variant */
+        .leave-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .leave-btn:hover {
+            box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3), 0 4px 6px -4px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Enhanced emoji picker with premium styling */
+        .emoji-picker {
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: var(--white);
+            border: 1px solid var(--neutral-slate-200);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: var(--shadow-xl);
+            display: none;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .emoji-picker.show {
+            display: grid;
+            animation: emojiPickerSlideUp 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes emojiPickerSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .emoji-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .emoji-btn:hover {
+            background: var(--neutral-slate-100);
+            transform: scale(1.2);
+        }
+
+        .emoji-toggle {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            color: var(--neutral-slate-500);
+        }
+
+        .emoji-toggle:hover {
+            background: var(--neutral-slate-100);
+            color: var(--primary-indigo);
+        }
+
+        /* Enhanced system messages */
+        .system-message {
+            text-align: center;
+            margin: 16px 0;
+            animation: messageSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .system-message .message-content {
+            background: var(--neutral-slate-100);
+            color: var(--neutral-slate-600);
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: 1px solid var(--neutral-slate-200);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .connection-status {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .connection-status.connected {
+            color: var(--success-green);
+        }
+
+        .connection-status.disconnected {
+            color: var(--error-red);
+        }
+
+        /* Header last-joined badge */
+        .last-joined-badge {
+            background: rgba(16, 185, 129, 0.12);
+            color: white;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        /* Enhanced responsive design */
+        @media (max-width: 768px) {
+            .welcome-card {
+                padding: 32px 24px;
+                margin: 16px;
+            }
+
+            .welcome-card h1 {
+                font-size: 2rem;
+            }
+
+            .chat-container {
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .chat-main {
+                height: calc(100vh - 80px);
+            }
+
+            .chat-header {
+                padding: 16px 20px;
+            }
+
+            .messages-container {
+                padding: 16px;
+            }
+
+            .message-input-area {
+                padding: 16px 20px;
+            }
+
+            .message-bubble {
+                max-width: 85%;
+                padding: 12px 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .welcome-card h1 {
+                font-size: 1.75rem;
+            }
+
+            .message-bubble {
+                max-width: 90%;
+            }
+
+            .emoji-picker {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+
+        /* Added premium loading animations */
+        @keyframes shimmer {
+            0% {
+                background-position: -200px 0;
+            }
+
+            100% {
+                background-position: calc(200px + 100%) 0;
+            }
+        }
+
+        .loading-shimmer {
+            background: linear-gradient(90deg, var(--neutral-slate-200) 25%, var(--neutral-slate-100) 50%, var(--neutral-slate-200) 75%);
+            background-size: 200px 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        /* Enhanced system messages and typing indicators with premium styling */
+        .system-message {
+            text-align: center;
+            margin: 20px 0;
+            animation: messageSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .system-message .message-content {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            color: #475569;
+            padding: 12px 24px;
+            border-radius: 24px;
+            display: inline-block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            backdrop-filter: blur(10px);
+        }
+
+        .system-text {
+            font-style: italic;
+            font-weight: 400;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            margin: 8px 24px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 16px;
+            font-size: 0.9rem;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            animation: typingSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes typingSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .typing-user {
+            font-style: italic;
+            font-weight: 500;
+            color: #4f46e5;
+        }
+
+        .connection-status {
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 0.025em;
+            text-transform: uppercase;
+        }
+
+        .connection-status.connected {
+            color: #059669;
+            text-shadow: 0 0 10px rgba(5, 150, 105, 0.3);
+        }
+
+        .connection-status.disconnected {
+            color: #dc2626;
+            text-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+        }
+
+        /* Added premium notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            font-weight: 500;
+            font-size: 0.9rem;
+            z-index: 1000;
+            animation: notificationSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes notificationSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        }
+
+        .notification.warning {
+            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Connection Status -->
+    <div class="connection-status" id="connectionStatus">
+        <i class="fas fa-circle"></i> Connecting...
+    </div>
+
+    <!-- Welcome Screen -->
+    <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-card" style="overflow: hidden;">
+            <h1><i class="fas fa-comments"></i> Flow Chat</h1>
+            <p>Join the conversation with people around the world</p>
+
+            <form id="joinForm">
+                <div class="input-group">
+                    <label for="username">Your Name</label>
+                    <input type="text" id="username" placeholder="Enter your name" maxlength="20" required>
+                </div>
+                <button type="submit" class="btn-primary" id="joinBtn">
+                    <i class="fas fa-sign-in-alt"></i> Join Chat
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Chat Interface -->
+    <div class="chat-container" id="chatContainer">
+        <header class="chat-header">
+            <h2><i class="fas fa-comments"></i> Flow Chat</h2>
+
+            <div class="user-info">
+                <div class="avatar-upload">
+                    <div class="user-avatar" id="userAvatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <input type="file" id="avatarInput" accept="image/*">
+                    <div class="avatar-overlay">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                </div>
+                <div class="status-indicator"></div>
+                <span id="currentUser"></span>
+                <span id="lastJoinedBadge" class="last-joined-badge" style="display:none; color: white;"></span>
+            </div>
+        </header>
+
+        <main class="chat-main">
+            <aside class="sidebar">
+                <h3><i class="fas fa-users"></i> Online Users (<span id="userCount">0</span>)</h3>
+                <ul class="online-users" id="onlineUsers"></ul>
+            </aside>
+
+            <div class="chat-area">
+                <div class="messages-container" id="messagesContainer">
+                    <div class="system-message">
+                        Welcome to Flow chat! Start chatting with people around the world.
+                    </div>
+                </div>
+
+                <div class="typing-indicator" id="typingIndicator">
+                    <div class="typing-users" id="typingUsers"></div>
+                    <div class="typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+
+                <div class="message-input-area">
+                    <div class="message-input-container">
+                        <div class="emoji-picker">
+                            <button type="button" class="emoji-btn" id="emojiBtn">😊</button>
+                            <div class="emoji-panel" id="emojiPanel">
+                                <div class="emoji-grid" id="emojiGrid"></div>
+                            </div>
+                        </div>
+                        <textarea id="messageInput" class="message-input" placeholder="Type your message..." rows="1"
+                            maxlength="500"></textarea>
+                        <div class="actions">
+                            <input type="file" id="fileInput" style="display:none" multiple>
+                            <button type="button" class="send-btn attach-btn" id="attachBtn" title="Attach files">
+                                <i class="fas fa-paperclip"></i>
+                            </button>
+                            <button type="button" class="send-btn" id="sendBtn" title="Send message">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                            <button type="button" class="send-btn leave-btn" id="leaveBtn" title="Leave session">
+                                <i class="fas fa-right-from-bracket"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        class ChatApp {
+            constructor() {
+                this.socket = null;
+                this.username = '';
+                this.isTyping = false;
+                this.typingTimeout = null;
+                this.messageSound = null;
+                this.typingUsers = new Set();
+                this.messages = [];
+                this.currentThread = null;
+                this.searchQuery = '';
+                this.userAvatar = null;
+
+                this.initializeElements();
+                this.initializeEmojis();
+                this.setupEventListeners();
+                this.createMessageSound();
+                this.loadAvatarFromStorage(); // Load avatar from storage on app start
+            }
+
+            initializeElements() {
+                this.welcomeScreen = document.getElementById('welcomeScreen');
+                this.chatContainer = document.getElementById('chatContainer');
+                this.joinForm = document.getElementById('joinForm');
+                this.usernameInput = document.getElementById('username');
+                this.joinBtn = document.getElementById('joinBtn');
+                this.currentUserSpan = document.getElementById('currentUser');
+                this.messagesContainer = document.getElementById('messagesContainer');
+                this.messageInput = document.getElementById('messageInput');
+                this.sendBtn = document.getElementById('sendBtn');
+                this.onlineUsers = document.getElementById('onlineUsers');
+                this.userCount = document.getElementById('userCount');
+                this.typingIndicator = document.getElementById('typingIndicator');
+                this.typingUsers = document.getElementById('typingUsers');
+                this.connectionStatus = document.getElementById('connectionStatus');
+                this.emojiBtn = document.getElementById('emojiBtn');
+                this.emojiPanel = document.getElementById('emojiPanel');
+                this.emojiGrid = document.getElementById('emojiGrid');
+                this.leaveBtn = document.getElementById('leaveBtn');
+                this.lastJoinedUsername = null;
+                this.lastJoinedBadge = document.getElementById('lastJoinedBadge');
+                this.themeToggle = document.getElementById('themeToggle');
+                this.fileInput = document.getElementById('fileInput');
+                this.attachBtn = document.getElementById('attachBtn');
+                this.searchInput = document.getElementById('searchInput');
+                this.avatarInput = document.getElementById('avatarInput');
+                this.userAvatarDiv = document.getElementById('userAvatar');
+                this.formatBtns = document.querySelectorAll('.format-btn');
+            }
+
+            initializeEmojis() {
+                const emojis = [
+                    '😊', '😂', '🥰', '😍', '🤔', '😎',
+                    '👍', '👎', '❤️', '💯', '🔥', '⭐',
+                    '🎉', '🚀', '💪', '🙌', '👏', '🤝',
+                    '😢', '😭', '😡', '🤯', '😴', '🤗',
+                    '🌟', '✨', '💫', '🌈', '🎯', '💡'
+                ];
+
+                emojis.forEach(emoji => {
+                    const button = document.createElement('button');
+                    button.className = 'emoji-item';
+                    button.textContent = emoji;
+                    button.onclick = () => this.insertEmoji(emoji);
+                    this.emojiGrid.appendChild(button);
+                });
+            }
+
+            setupEventListeners() {
+                this.joinForm.addEventListener('submit', (e) => this.handleJoin(e));
+                this.messageInput.addEventListener('keydown', (e) => this.handleMessageKeydown(e));
+                this.messageInput.addEventListener('input', () => this.handleTyping());
+                this.sendBtn.addEventListener('click', () => this.sendMessage());
+                this.emojiBtn.addEventListener('click', () => this.toggleEmojiPanel());
+                this.leaveBtn.addEventListener('click', () => this.leaveSession());
+                this.themeToggle.addEventListener('click', () => this.toggleTheme());
+                this.attachBtn.addEventListener('click', () => this.fileInput.click());
+                this.fileInput.addEventListener('change', (e) => this.handleFileSelected(e));
+                this.searchInput.addEventListener('input', (e) => this.handleSearch(e));
+                this.avatarInput.addEventListener('change', (e) => this.handleAvatarUpload(e));
+
+                // Rich text formatting
+                this.formatBtns.forEach(btn => {
+                    btn.addEventListener('click', (e) => this.handleFormatting(e));
+                });
+
+                // Auto-resize textarea
+                this.messageInput.addEventListener('input', () => {
+                    this.messageInput.style.height = 'auto';
+                    this.messageInput.style.height = Math.min(this.messageInput.scrollHeight, 120) + 'px';
+                });
+
+                // Close emoji panel when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.emoji-picker')) {
+                        this.emojiPanel.classList.remove('show');
+                    }
+                });
+            }
+
+            createMessageSound() {
+                // Create a simple notification sound using Web Audio API
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            playNotificationSound() {
+                if (!this.audioContext) return;
+
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+
+                oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(600, this.audioContext.currentTime + 0.1);
+
+                gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.1, this.audioContext.currentTime + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.2);
+
+                oscillator.start(this.audioContext.currentTime);
+                oscillator.stop(this.audioContext.currentTime + 0.2);
+            }
+
+            handleJoin(e) {
+                e.preventDefault();
+                const username = this.usernameInput.value.trim();
+
+                if (username.length < 2) {
+                    alert('Please enter a name with at least 2 characters');
+                    return;
+                }
+
+                this.username = username;
+                this.joinBtn.disabled = true;
+                this.joinBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+
+                this.connectToServer();
+            }
+
+            connectToServer() {
+                // Connect to Socket.io server
+                this.socket = io();
+
+                // Handle connection events
+                this.socket.on('connect', () => {
+                    console.log('Connected to server');
+                    this.connectionStatus.textContent = 'Connected';
+                    this.connectionStatus.className = 'connection-status connected';
+
+                    // Join the chat with username
+                    this.socket.emit('join', { username: this.username });
+                });
+
+                this.socket.on('connected', (data) => {
+                    this.onConnected();
+                });
+
+                this.socket.on('disconnect', () => {
+                    console.log('Disconnected from server');
+                    this.connectionStatus.textContent = 'Disconnected';
+                    this.connectionStatus.className = 'connection-status disconnected';
+                });
+
+                // Handle incoming messages
+                this.socket.on('message', (message) => {
+                    const isOwnMessage = message.username === this.username;
+                    if (message.files && message.files.length) {
+                        this.addFileMessage(message.username, message.files, new Date(message.timestamp), isOwnMessage, message.messageId, message.threadId);
+                    }
+                    if (message.text) {
+                        this.addMessage(message.username, message.text, new Date(message.timestamp), isOwnMessage, message.messageId, message.threadId);
+                    }
+
+                    // Play sound for other users' messages
+                    if (!isOwnMessage) {
+                        this.playNotificationSound();
+                    }
+                });
+
+                // Handle reactions
+                this.socket.on('reaction', (data) => {
+                    const message = this.messages.find(m => m.id == data.messageId);
+                    if (message) {
+                        if (data.username !== this.username) {
+                            // Add reaction from other user
+                            message.reactions.push({
+                                emoji: data.emoji,
+                                username: data.username,
+                                timestamp: new Date()
+                            });
+                            this.updateReactionsDisplay(data.messageId);
+                        }
+                    }
+                });
+
+                // Handle user join/leave
+                this.socket.on('user-joined', (data) => {
+                    this.addSystemMessage(`${data.username} joined the chat`);
+                    this.updateOnlineCount(data.userCount);
+                    this.lastJoinedUsername = data.username;
+                    this.updateLastJoinedBadge();
+                });
+
+                this.socket.on('user-left', (data) => {
+                    this.addSystemMessage(`${data.username} left the chat`);
+                    this.updateOnlineCount(data.userCount);
+                });
+
+                // Handle users list updates
+                this.socket.on('users-update', (data) => {
+                    this.updateUsersList(data.users);
+                    this.updateOnlineCount(data.count);
+                    const usernames = data.users.map(u => u.username);
+                    if (!usernames.includes(this.lastJoinedUsername)) {
+                        this.lastJoinedUsername = null;
+                    }
+                    this.updateLastJoinedBadge();
+                });
+
+                // Handle typing indicators
+                this.socket.on('user-typing', (data) => {
+                    if (data.username !== this.username) {
+                        if (data.isTyping) {
+                            this.addTypingUser(data.username);
+                        } else {
+                            this.removeTypingUser(data.username);
+                        }
+                    }
+                });
+            }
+
+            handleMessageKeydown(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendMessage();
+                }
+            }
+
+            handleTyping() {
+                if (!this.isTyping) {
+                    this.isTyping = true;
+                    this.socket.emit('typing', { username: this.username });
+                }
+
+                clearTimeout(this.typingTimeout);
+                this.typingTimeout = setTimeout(() => {
+                    this.isTyping = false;
+                    this.socket.emit('stop-typing', { username: this.username });
+                }, 1000);
+            }
+
+            sendMessage() {
+                const text = this.messageInput.value.trim();
+                if (!text && (!this.fileInput.files || this.fileInput.files.length === 0)) return;
+
+                const files = Array.from(this.fileInput.files || []);
+                const messageId = Date.now() + Math.random();
+
+                if (files.length > 0) {
+                    Promise.all(files.map(f => this.fileToPayload(f))).then(filePayloads => {
+                        const message = {
+                            text: text || '',
+                            files: filePayloads,
+                            timestamp: new Date(),
+                            messageId,
+                            threadId: this.currentThread
+                        };
+                        this.socket.emit('message', message);
+                    });
+                } else {
+                    const message = {
+                        text,
+                        timestamp: new Date(),
+                        messageId,
+                        threadId: this.currentThread
+                    };
+                    this.socket.emit('message', message);
+                }
+
+                this.messageInput.value = '';
+                this.messageInput.style.height = 'auto';
+                this.fileInput.value = '';
+                this.currentThread = null; // Clear thread after sending
+
+                // Stop typing indicator
+                if (this.isTyping) {
+                    this.isTyping = false;
+                    this.socket.emit('stop-typing', { username: this.username });
+                }
+            }
+
+            addFileMessage(username, files, timestamp, isOwn, messageId = null, threadId = null) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isOwn ? 'own' : ''}`;
+                const timeString = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const filesHtml = files.map(f => {
+                    const safeName = this.escapeHtml(f.name || 'file');
+                    const safeType = this.escapeHtml(f.type || '');
+                    const href = this.escapeHtml(f.dataUrl || '#');
+                    const isImage = (f.type || '').startsWith('image/');
+                    if (isImage) {
+                        return `<div style="margin-top:8px"><a href="${href}" download="${safeName}" target="_blank"><img src="${href}" alt="${safeName}" style="max-width:240px;border-radius:12px;border:1px solid var(--neutral-slate-200)"/></a></div>`;
+                    }
+                    return `<div style="margin-top:8px"><a href="${href}" download="${safeName}" target="_blank"><i class="fas fa-file"></i> ${safeName} <span style="opacity:.6">${safeType}</span></a></div>`;
+                }).join('');
+
+                messageDiv.innerHTML = `
+                    <div class="message-bubble">
+                        ${!isOwn ? `<div class="message-header">${username}</div>` : ''}
+                        ${filesHtml}
+                        <div class="message-time">${timeString}</div>
+                    </div>
+                `;
+                this.messagesContainer.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+
+            fileToPayload(file) {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        resolve({
+                            name: file.name,
+                            type: file.type,
+                            size: file.size,
+                            dataUrl: reader.result
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            handleFileSelected(e) {
+                const files = Array.from(e.target.files || []);
+                if (!files.length) return;
+                // Optional: show a small toast or preview count
+            }
+
+
+
+            addMessage(username, text, timestamp, isOwn, messageId = null, threadId = null) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isOwn ? 'own' : ''}`;
+                messageDiv.dataset.messageId = messageId || Date.now() + Math.random();
+                if (threadId) messageDiv.dataset.threadId = threadId;
+
+                const timeString = timestamp.toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                const formattedText = this.formatMessageText(text);
+                const threadIndicator = threadId ? `<div class="thread-indicator" onclick="this.showThread(${threadId})">View thread</div>` : '';
+
+                messageDiv.innerHTML = `
+                    <div class="message-bubble">
+                        ${!isOwn ? `<div class="message-header">${username}</div>` : ''}
+                        <div class="message-text">${formattedText}</div>
+                        <div class="message-time">${timeString}</div>
+                        ${threadIndicator}
+                        <div class="message-reactions" id="reactions-${messageDiv.dataset.messageId}"></div>
+                        <div class="message-actions">
+                            <button class="action-btn" onclick="chatApp.addReaction('👍', ${messageDiv.dataset.messageId})" title="👍">👍</button>
+                            <button class="action-btn" onclick="chatApp.addReaction('❤️', ${messageDiv.dataset.messageId})" title="❤️">❤️</button>
+                            <button class="action-btn" onclick="chatApp.addReaction('😂', ${messageDiv.dataset.messageId})" title="😂">😂</button>
+                            <button class="action-btn" onclick="chatApp.replyToMessage(${messageDiv.dataset.messageId})" title="Reply"><i class="fas fa-reply"></i></button>
+                        </div>
+                    </div>
+                `;
+
+                this.messagesContainer.appendChild(messageDiv);
+                this.messages.push({
+                    id: messageDiv.dataset.messageId,
+                    username,
+                    text,
+                    timestamp,
+                    isOwn,
+                    threadId,
+                    reactions: []
+                });
+                this.scrollToBottom();
+
+                if (!isOwn) {
+                    this.playNotificationSound();
+                }
+            }
+
+            addSystemMessage(text) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message system-message';
+                messageDiv.innerHTML = `
+                    <div class="message-content">
+                        <span class="system-text">${text}</span>
+                        <span class="message-time">${this.formatTime(new Date())}</span>
+                    </div>
+                `;
+
+                this.messagesContainer.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+
+            showTypingIndicator(username) {
+                // Remove existing typing indicator for this user
+                this.hideTypingIndicator(username);
+
+                const indicator = document.createElement('div');
+                indicator.className = 'typing-indicator';
+                indicator.dataset.username = username;
+                indicator.innerHTML = `
+                    <div class="typing-users">
+                        <div class="typing-user">${username} is typing</div>
+                    </div>
+                    <div class="typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                `;
+
+                this.messagesContainer.appendChild(indicator);
+                this.scrollToBottom();
+            }
+
+            hideTypingIndicator(username) {
+                const indicator = this.messagesContainer.querySelector(`[data-username="${username}"]`);
+                if (indicator) {
+                    indicator.remove();
+                }
+            }
+
+            updateUsersList(users) {
+                // users is an array of { id, username }
+                const usernames = users.map(u => u.username);
+                this.updateOnlineUsers(usernames);
+            }
+
+            updateOnlineCount(count) {
+                this.userCount.textContent = count;
+            }
+
+            toggleEmojiPanel() {
+                this.emojiPanel.classList.toggle('show');
+            }
+
+            insertEmoji(emoji) {
+                const cursorPos = this.messageInput.selectionStart;
+                const textBefore = this.messageInput.value.substring(0, cursorPos);
+                const textAfter = this.messageInput.value.substring(cursorPos);
+
+                this.messageInput.value = textBefore + emoji + textAfter;
+                this.messageInput.focus();
+                this.messageInput.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
+
+                this.emojiPanel.classList.remove('show');
+            }
+
+            scrollToBottom() {
+                this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            formatTime(date) {
+                return date.toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            onConnected() {
+                this.welcomeScreen.style.display = 'none';
+                this.chatContainer.style.display = 'block';
+                this.currentUserSpan.textContent = this.username;
+                this.updateUserAvatar(); // Update avatar after successful connection
+
+                this.updateConnectionStatus('connected');
+                this.addSystemMessage(`${this.username} joined the chat`);
+                this.updateOnlineUsers([this.username]);
+                this.updateLastJoinedBadge();
+            }
+
+            updateOnlineUsers(users) {
+                this.onlineUsers.innerHTML = '';
+                this.userCount.textContent = users.length;
+
+                users.forEach(user => {
+                    const li = document.createElement('li');
+                    li.className = user === this.username ? 'current-user' : '';
+                    const initial = this.escapeHtml(user.charAt(0).toUpperCase());
+                    const isYou = user === this.username;
+                    const isNew = this.lastJoinedUsername && user === this.lastJoinedUsername && !isYou;
+                    li.innerHTML = `
+                        <div class="user-avatar">${initial}</div>
+                        <div class="user-name">
+                            <span>${this.escapeHtml(user)}</span>
+                            ${isYou ? '<span class="you-badge">You</span>' : ''}
+                            ${isNew ? '<span class="new-badge">New</span>' : ''}
+                        </div>
+                    `;
+                    this.onlineUsers.appendChild(li);
+                });
+            }
+
+            updateLastJoinedBadge() {
+                if (this.lastJoinedUsername && this.lastJoinedUsername !== this.username) {
+                    this.lastJoinedBadge.style.display = 'inline-flex';
+                    this.lastJoinedBadge.textContent = `Joined: ${this.lastJoinedUsername}`;
+                } else {
+                    this.lastJoinedBadge.style.display = 'none';
+                    this.lastJoinedBadge.textContent = '';
+                }
+            }
+
+            leaveSession() {
+                try {
+                    if (this.socket && this.socket.connected) {
+                        this.socket.disconnect();
+                    }
+                } catch (_) { }
+
+                // Reset UI
+                this.chatContainer.style.display = 'none';
+                this.welcomeScreen.style.display = 'flex';
+                this.connectionStatus.className = 'connection-status disconnected';
+                this.connectionStatus.innerHTML = '<i class="fas fa-circle"></i> Disconnected';
+                this.joinBtn.disabled = false;
+                this.joinBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Join Chat';
+                // Keep username in input so user can rejoin quickly
+                this.usernameInput.value = this.username || '';
+                // Clear state
+                this.messagesContainer.innerHTML = '<div class="system-message">You left the session.</div>';
+                this.onlineUsers.innerHTML = '';
+                this.userCount.textContent = '0';
+                this.lastJoinedUsername = null;
+                this.userAvatar = null; // Clear avatar on leave
+                this.updateUserAvatar();
+            }
+
+            updateConnectionStatus(status) {
+                const statusEl = this.connectionStatus;
+                statusEl.className = `connection-status ${status}`;
+
+                if (status === 'connected') {
+                    statusEl.innerHTML = '<i class="fas fa-circle"></i> Connected';
+                } else if (status === 'disconnected') {
+                    statusEl.innerHTML = '<i class="fas fa-circle"></i> Disconnected';
+                } else {
+                    statusEl.innerHTML = '<i class="fas fa-circle"></i> Connecting...';
+                }
+            }
+
+            addTypingUser(username) {
+                this.typingUsers.add(username);
+                this.updateTypingIndicator();
+            }
+
+            removeTypingUser(username) {
+                this.typingUsers.delete(username);
+                this.updateTypingIndicator();
+            }
+
+            updateTypingIndicator() {
+                if (this.typingUsers.size === 0) {
+                    this.typingIndicator.style.display = 'none';
+                    return;
+                }
+
+                this.typingIndicator.style.display = 'block';
+                const typingUsersDiv = document.getElementById('typingUsers');
+                typingUsersDiv.innerHTML = '';
+
+                this.typingUsers.forEach(username => {
+                    const typingUser = document.createElement('div');
+                    typingUser.className = 'typing-user';
+                    typingUser.textContent = `${username} is typing`;
+                    typingUsersDiv.appendChild(typingUser);
+                });
+            }
+
+            handleSearch(e) {
+                this.searchQuery = e.target.value.toLowerCase();
+                this.filterMessages();
+            }
+
+            filterMessages() {
+                const messageElements = this.messagesContainer.querySelectorAll('.message:not(.system-message)');
+
+                messageElements.forEach(msg => {
+                    const text = msg.textContent.toLowerCase();
+                    const isVisible = !this.searchQuery || text.includes(this.searchQuery);
+                    msg.style.display = isVisible ? 'block' : 'none';
+
+                    if (isVisible && this.searchQuery) {
+                        msg.style.backgroundColor = 'rgba(79, 70, 229, 0.1)';
+                    } else {
+                        msg.style.backgroundColor = '';
+                    }
+                });
+            }
+
+            handleAvatarUpload(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                if (!file.type.startsWith('image/')) {
+                    alert('Please select an image file');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    this.userAvatar = event.target.result;
+                    this.updateUserAvatar();
+                    this.saveAvatarToStorage();
+                };
+                reader.readAsDataURL(file);
+            }
+
+            updateUserAvatar() {
+                if (this.userAvatar) {
+                    this.userAvatarDiv.innerHTML = `<img src="${this.userAvatar}" alt="Avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+                } else {
+                    this.userAvatarDiv.innerHTML = '<i class="fas fa-user"></i>';
+                }
+            }
+
+            saveAvatarToStorage() {
+                try {
+                    localStorage.setItem('flowchat-avatar', this.userAvatar);
+                } catch (_) { }
+            }
+
+            loadAvatarFromStorage() {
+                try {
+                    const saved = localStorage.getItem('flowchat-avatar');
+                    if (saved) {
+                        this.userAvatar = saved;
+                        this.updateUserAvatar();
+                    }
+                } catch (_) { }
+            }
+
+            handleFormatting(e) {
+                const format = e.target.dataset.format;
+                const start = this.messageInput.selectionStart;
+                const end = this.messageInput.selectionEnd;
+                const text = this.messageInput.value;
+                const selectedText = text.substring(start, end);
+
+                let formattedText = '';
+                switch (format) {
+                    case 'bold':
+                        formattedText = `**${selectedText}**`;
+                        break;
+                    case 'italic':
+                        formattedText = `*${selectedText}*`;
+                        break;
+                    case 'underline':
+                        formattedText = `__${selectedText}__`;
+                        break;
+                    case 'code':
+                        formattedText = `\`${selectedText}\``;
+                        break;
+                    case 'link':
+                        const url = prompt('Enter URL:');
+                        if (url) {
+                            formattedText = `[${selectedText}](${url})`;
+                        } else {
+                            return;
+                        }
+                        break;
+                }
+
+                this.messageInput.value = text.substring(0, start) + formattedText + text.substring(end);
+                this.messageInput.focus();
+                this.messageInput.setSelectionRange(start + formattedText.length, start + formattedText.length);
+            }
+
+            formatMessageText(text) {
+                // Convert markdown-like syntax to HTML
+                return text
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/__(.*?)__/g, '<u>$1</u>')
+                    .replace(/`(.*?)`/g, '<code>$1</code>')
+                    .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
+            }
+
+            addReaction(emoji, messageId) {
+                const message = this.messages.find(m => m.id == messageId);
+                if (!message) return;
+
+                const existingReaction = message.reactions.find(r => r.emoji === emoji && r.username === this.username);
+                if (existingReaction) {
+                    // Remove reaction
+                    message.reactions = message.reactions.filter(r => r !== existingReaction);
+                } else {
+                    // Add reaction
+                    message.reactions.push({
+                        emoji,
+                        username: this.username,
+                        timestamp: new Date()
+                    });
+                }
+
+                this.updateReactionsDisplay(messageId);
+                this.socket.emit('reaction', { messageId, emoji, username: this.username });
+            }
+
+            updateReactionsDisplay(messageId) {
+                const message = this.messages.find(m => m.id == messageId);
+                if (!message) return;
+
+                const reactionsDiv = document.getElementById(`reactions-${messageId}`);
+                if (!reactionsDiv) return;
+
+                // Group reactions by emoji
+                const reactionGroups = {};
+                message.reactions.forEach(r => {
+                    if (!reactionGroups[r.emoji]) {
+                        reactionGroups[r.emoji] = [];
+                    }
+                    reactionGroups[r.emoji].push(r.username);
+                });
+
+                reactionsDiv.innerHTML = Object.entries(reactionGroups).map(([emoji, users]) => {
+                    const isOwnReaction = users.includes(this.username);
+                    const count = users.length;
+                    return `<div class="reaction ${isOwnReaction ? 'own-reaction' : ''}" onclick="this.addReaction('${emoji}', ${messageId})">${emoji} ${count}</div>`;
+                }).join('');
+            }
+
+            replyToMessage(messageId) {
+                const message = this.messages.find(m => m.id == messageId);
+                if (!message) return;
+
+                this.currentThread = messageId;
+                this.messageInput.focus();
+                this.messageInput.value = `@${message.username} `;
+                this.messageInput.setSelectionRange(this.messageInput.value.length, this.messageInput.value.length);
+            }
+
+            showThread(threadId) {
+                // This would show a modal or expand the thread
+                console.log('Showing thread:', threadId);
+                // For now, just highlight the original message
+                const originalMessage = document.querySelector(`[data-thread-id="${threadId}"]`);
+                if (originalMessage) {
+                    originalMessage.scrollIntoView({ behavior: 'smooth' });
+                    originalMessage.style.backgroundColor = 'rgba(79, 70, 229, 0.2)';
+                    setTimeout(() => {
+                        originalMessage.style.backgroundColor = '';
+                    }, 2000);
+                }
+            }
+        }
+
+        // Initialize the chat app when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                const saved = localStorage.getItem('flowchat-theme');
+                if (saved === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch (_) { }
+            const chatApp = new ChatApp(); // Pass the instance to global scope
+        });
+    </script>
+</body>
+
+</html>
